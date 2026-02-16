@@ -57,7 +57,8 @@ export async function authenticateSupabase(
   }
 
   const linkData = await linkRes.json();
-  const hashedToken = linkData?.properties?.hashed_token;
+  // Raw API returns hashed_token at top level; JS SDK wraps it under properties
+  const hashedToken = linkData?.hashed_token ?? linkData?.properties?.hashed_token;
   if (!hashedToken) {
     throw new Error("Magic link response missing hashed_token");
   }
