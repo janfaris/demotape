@@ -1,0 +1,51 @@
+{
+  "baseUrl": "http://localhost:5500/site",
+  "viewport": { "width": 1280, "height": 800 },
+  "output": {
+    "format": "both",
+    "name": "demotape-demo",
+    "dir": "./videos"
+  },
+  "colorScheme": "dark",
+  "segments": [
+    {
+      "name": "Hero",
+      "path": "/index.html",
+      "waitFor": "h1",
+      "settleMs": 2000,
+      "dwellMs": 4000
+    },
+    {
+      "name": "Before/After",
+      "path": "/index.html",
+      "waitFor": ".comparison-row",
+      "settleMs": 1500,
+      "scroll": { "distance": 900, "duration": 3000 },
+      "dwellMs": 2000
+    },
+    {
+      "name": "Config Preview",
+      "path": "/index.html",
+      "waitFor": ".syn-key",
+      "settleMs": 1500,
+      "scroll": { "distance": 1800, "duration": 4000 },
+      "dwellMs": 2000
+    },
+    {
+      "name": "Features",
+      "path": "/index.html",
+      "waitFor": ".feature-card",
+      "settleMs": 1500,
+      "scroll": { "distance": 2800, "duration": 5000 },
+      "dwellMs": 2000
+    },
+    {
+      "name": "Pricing",
+      "path": "/index.html",
+      "waitFor": ".pricing-popular",
+      "settleMs": 1500,
+      "scroll": { "distance": 3800, "duration": 5000 },
+      "dwellMs": 3000
+    }
+  ]
+}
