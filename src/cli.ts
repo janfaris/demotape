@@ -3,12 +3,13 @@ import { resolve } from "path";
 import { writeFileSync, existsSync } from "fs";
 import { loadConfig } from "./config.js";
 import { record } from "./recorder.js";
+import { enforceLicense, detectProFeatures, validateLicenseKey } from "./license.js";
 
 const PRESETS: Record<string, object> = {
   "landing-page": {
     baseUrl: "http://localhost:3000",
     viewport: { width: 1280, height: 800 },
-    output: { format: "both", name: "demo" },
+    output: { format: "mp4", name: "demo" },
     colorScheme: "dark",
     segments: [
       {
@@ -82,6 +83,7 @@ export function createCLI(): Command {
     .requiredOption("-c, --config <path>", "Path to the JSON config file")
     .option("--format <format>", "Output format override (mp4, webm, both)")
     .option("--output <dir>", "Output directory override")
+    .option("--license <key>", "Pro license key (or set DEMOTAPE_LICENSE_KEY)")
     .action(async (opts) => {
       try {
         const config = loadConfig(opts.config);
@@ -94,7 +96,8 @@ export function createCLI(): Command {
           config.output.dir = opts.output;
         }
 
-        await record(config);
+        enforceLicense(config, opts.license);
+        await record(config, { licenseKey: opts.license });
       } catch (err) {
         console.error(
           `Error: ${err instanceof Error ? err.message : String(err)}`
@@ -136,6 +139,7 @@ export function createCLI(): Command {
     .command("validate")
     .description("Validate a config file without recording")
     .requiredOption("-c, --config <path>", "Path to the JSON config file")
+    .option("--license <key>", "Pro license key to validate")
     .action((opts) => {
       try {
         const config = loadConfig(opts.config);
@@ -153,6 +157,21 @@ export function createCLI(): Command {
         if (config.overlays) {
           if (config.overlays.top) console.log(`  Top overlay: "${config.overlays.top.text}"`);
           if (config.overlays.bottom) console.log(`  Bottom overlay: "${config.overlays.bottom.text}"`);
+        }
+
+        // Pro feature detection
+        const proFeatures = detectProFeatures(config);
+        if (proFeatures.length > 0) {
+          console.log(`\n  Pro features detected:`);
+          proFeatures.forEach((f) => console.log(`    - ${f}`));
+
+          if (opts.license) {
+            const valid = validateLicenseKey(opts.license);
+            console.log(`\n  License key: ${valid ? "valid" : "INVALID"}`);
+          } else {
+            console.log(`\n  A Pro license key is required to record this config.`);
+            console.log(`  Get one at https://demotape.dev/pro`);
+          }
         }
       } catch (err) {
         console.error(

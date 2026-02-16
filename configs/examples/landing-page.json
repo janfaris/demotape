@@ -1,7 +1,7 @@
 {
   "baseUrl": "http://localhost:3000",
   "viewport": { "width": 1280, "height": 800 },
-  "output": { "format": "both", "name": "demo" },
+  "output": { "format": "mp4", "name": "demo" },
   "colorScheme": "dark",
   "segments": [
     {

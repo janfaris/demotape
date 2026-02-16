@@ -9,3 +9,4 @@ videos/
 .env.*
 !.env.example
 .DS_Store
+.license-private-key

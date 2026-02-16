@@ -10,6 +10,11 @@ import {
   safeGoto,
   injectOverlayAndAnimationSuppressions,
 } from "./utils.js";
+import { enforceLicense } from "./license.js";
+
+export interface RecordOptions {
+  licenseKey?: string;
+}
 
 /**
  * Main recording orchestrator.
@@ -21,7 +26,11 @@ import {
  * 4. Record (each segment as a separate video)
  * 5. Encode (FFmpeg trim + concat + overlays)
  */
-export async function record(config: DemotapeConfig): Promise<void> {
+export async function record(
+  config: DemotapeConfig,
+  options?: RecordOptions
+): Promise<void> {
+  enforceLicense(config, options?.licenseKey);
   const recordingDir = resolve(config.output.dir, ".recordings");
   const outputDir = resolve(config.output.dir);
 

@@ -1,5 +1,5 @@
 // Public API
-export { record } from "./recorder.js";
+export { record, type RecordOptions } from "./recorder.js";
 export {
   loadConfig,
   validateConfig,
@@ -11,3 +11,9 @@ export {
   type OverlayConfig,
 } from "./config.js";
 export { createCLI } from "./cli.js";
+export {
+  enforceLicense,
+  validateLicenseKey,
+  detectProFeatures,
+  LicenseError,
+} from "./license.js";
