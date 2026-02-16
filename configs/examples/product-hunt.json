@@ -1,0 +1,14 @@
+{
+  "baseUrl": "http://localhost:3000",
+  "viewport": { "width": 1920, "height": 1080 },
+  "output": { "format": "mp4", "name": "product-hunt-demo" },
+  "segments": [
+    {
+      "name": "Hero",
+      "path": "/",
+      "waitFor": "h1",
+      "settleMs": 2000,
+      "dwellMs": 4000
+    }
+  ]
+}

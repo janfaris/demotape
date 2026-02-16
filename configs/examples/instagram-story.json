@@ -1,0 +1,23 @@
+{
+  "baseUrl": "http://localhost:3000",
+  "viewport": { "width": 540, "height": 960 },
+  "output": {
+    "size": { "width": 1080, "height": 1920 },
+    "format": "mp4",
+    "name": "story"
+  },
+  "overlays": {
+    "top": { "text": "Your App Name", "height": 120 },
+    "bottom": { "text": "Try it free", "height": 100 }
+  },
+  "segments": [
+    {
+      "name": "Feature Page",
+      "path": "/features",
+      "waitFor": "h1",
+      "settleMs": 2000,
+      "scroll": { "distance": 800, "duration": 5000 },
+      "dwellMs": 2000
+    }
+  ]
+}

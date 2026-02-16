@@ -1,0 +1,178 @@
+import { Command } from "commander";
+import { resolve } from "path";
+import { writeFileSync, existsSync } from "fs";
+import { loadConfig } from "./config.js";
+import { record } from "./recorder.js";
+
+const PRESETS: Record<string, object> = {
+  "landing-page": {
+    baseUrl: "http://localhost:3000",
+    viewport: { width: 1280, height: 800 },
+    output: { format: "both", name: "demo" },
+    colorScheme: "dark",
+    segments: [
+      {
+        name: "Home",
+        path: "/",
+        waitFor: "h1",
+        settleMs: 1500,
+        dwellMs: 3000,
+      },
+      {
+        name: "Dashboard",
+        path: "/dashboard",
+        waitFor: "main",
+        settleMs: 2000,
+        scroll: { distance: 400, duration: 2500 },
+        dwellMs: 1500,
+      },
+    ],
+  },
+  "instagram-story": {
+    baseUrl: "http://localhost:3000",
+    viewport: { width: 540, height: 960 },
+    output: {
+      size: { width: 1080, height: 1920 },
+      format: "mp4",
+      name: "story",
+    },
+    overlays: {
+      top: { text: "Your App Name", height: 120 },
+      bottom: { text: "Try it free", height: 100 },
+    },
+    segments: [
+      {
+        name: "Feature Page",
+        path: "/features",
+        waitFor: "h1",
+        settleMs: 2000,
+        scroll: { distance: 800, duration: 5000 },
+        dwellMs: 2000,
+      },
+    ],
+  },
+  "product-hunt": {
+    baseUrl: "http://localhost:3000",
+    viewport: { width: 1920, height: 1080 },
+    output: { format: "mp4", name: "product-hunt-demo" },
+    segments: [
+      {
+        name: "Hero",
+        path: "/",
+        waitFor: "h1",
+        settleMs: 2000,
+        dwellMs: 4000,
+      },
+    ],
+  },
+};
+
+export function createCLI(): Command {
+  const program = new Command();
+
+  program
+    .name("demotape")
+    .description("Record polished demo videos of your web app from a JSON config")
+    .version("0.1.0");
+
+  // ─── record ───
+  program
+    .command("record")
+    .description("Record a demo video using a config file")
+    .requiredOption("-c, --config <path>", "Path to the JSON config file")
+    .option("--format <format>", "Output format override (mp4, webm, both)")
+    .option("--output <dir>", "Output directory override")
+    .action(async (opts) => {
+      try {
+        const config = loadConfig(opts.config);
+
+        // Apply CLI overrides
+        if (opts.format) {
+          config.output.format = opts.format;
+        }
+        if (opts.output) {
+          config.output.dir = opts.output;
+        }
+
+        await record(config);
+      } catch (err) {
+        console.error(
+          `Error: ${err instanceof Error ? err.message : String(err)}`
+        );
+        process.exit(1);
+      }
+    });
+
+  // ─── init ───
+  program
+    .command("init")
+    .description("Generate a starter config file")
+    .option("-p, --preset <name>", "Preset to use (landing-page, instagram-story, product-hunt)", "landing-page")
+    .option("-o, --output <path>", "Output file path", "demotape.json")
+    .action((opts) => {
+      const preset = PRESETS[opts.preset];
+      if (!preset) {
+        console.error(
+          `Unknown preset: ${opts.preset}\nAvailable: ${Object.keys(PRESETS).join(", ")}`
+        );
+        process.exit(1);
+      }
+
+      const outputPath = resolve(opts.output);
+      if (existsSync(outputPath)) {
+        console.error(`File already exists: ${outputPath}`);
+        process.exit(1);
+      }
+
+      writeFileSync(outputPath, JSON.stringify(preset, null, 2) + "\n");
+      console.log(`Created ${outputPath}`);
+      console.log(`\nNext steps:`);
+      console.log(`  1. Edit ${opts.output} with your app's URL and pages`);
+      console.log(`  2. Run: demotape record --config ${opts.output}`);
+    });
+
+  // ─── validate ───
+  program
+    .command("validate")
+    .description("Validate a config file without recording")
+    .requiredOption("-c, --config <path>", "Path to the JSON config file")
+    .action((opts) => {
+      try {
+        const config = loadConfig(opts.config);
+        console.log("Config is valid!");
+        console.log(`  Base URL: ${config.baseUrl}`);
+        console.log(`  Viewport: ${config.viewport.width}x${config.viewport.height}`);
+        console.log(`  Segments: ${config.segments.length}`);
+        config.segments.forEach((s, i) => {
+          console.log(`    ${i + 1}. ${s.name} (${s.path})`);
+        });
+        console.log(`  Output: ${config.output.format} -> ${config.output.dir}/${config.output.name}`);
+        if (config.auth) {
+          console.log(`  Auth: ${config.auth.provider}`);
+        }
+        if (config.overlays) {
+          if (config.overlays.top) console.log(`  Top overlay: "${config.overlays.top.text}"`);
+          if (config.overlays.bottom) console.log(`  Bottom overlay: "${config.overlays.bottom.text}"`);
+        }
+      } catch (err) {
+        console.error(
+          err instanceof Error ? err.message : String(err)
+        );
+        process.exit(1);
+      }
+    });
+
+  // ─── presets ───
+  program
+    .command("presets")
+    .description("List available config presets")
+    .action(() => {
+      console.log("Available presets:\n");
+      console.log("  landing-page      Landscape 1280x800, MP4+WebM, dark theme");
+      console.log("  instagram-story   Vertical 1080x1920 with text overlays");
+      console.log("  product-hunt      16:9 landscape 1920x1080, clean");
+      console.log("\nUsage: demotape init --preset <name>");
+    });
+
+  return program;
+}

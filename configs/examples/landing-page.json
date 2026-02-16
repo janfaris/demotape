@@ -1,0 +1,23 @@
+{
+  "baseUrl": "http://localhost:3000",
+  "viewport": { "width": 1280, "height": 800 },
+  "output": { "format": "both", "name": "demo" },
+  "colorScheme": "dark",
+  "segments": [
+    {
+      "name": "Home",
+      "path": "/",
+      "waitFor": "h1",
+      "settleMs": 1500,
+      "dwellMs": 3000
+    },
+    {
+      "name": "Dashboard",
+      "path": "/dashboard",
+      "waitFor": "main",
+      "settleMs": 2000,
+      "scroll": { "distance": 400, "duration": 2500 },
+      "dwellMs": 1500
+    }
+  ]
+}
