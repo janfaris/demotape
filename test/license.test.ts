@@ -80,7 +80,18 @@ describe("validateLicenseKey", () => {
 /* ─── detectProFeatures ─── */
 
 describe("detectProFeatures", () => {
+  const originalCI = process.env.CI;
+
+  afterEach(() => {
+    if (originalCI !== undefined) {
+      process.env.CI = originalCI;
+    } else {
+      delete process.env.CI;
+    }
+  });
+
   it("returns empty for a free config (mp4, no overlays, no supabase)", () => {
+    delete process.env.CI;
     const config = makeConfig();
     expect(detectProFeatures(config)).toEqual([]);
   });
@@ -148,6 +159,7 @@ describe("detectProFeatures", () => {
   });
 
   it("detects multiple Pro features at once", () => {
+    delete process.env.CI;
     const config = makeConfig({
       output: { format: "both" },
       overlays: { top: { text: "Hi" } },
@@ -156,15 +168,50 @@ describe("detectProFeatures", () => {
     const features = detectProFeatures(config);
     expect(features).toHaveLength(3);
   });
+
+  it("detects CI environment when CI=true", () => {
+    process.env.CI = "true";
+    const config = makeConfig();
+    const features = detectProFeatures(config);
+    expect(features).toHaveLength(1);
+    expect(features[0]).toContain("CI/CD environment");
+  });
+
+  it("does not detect CI when CI env var is unset", () => {
+    delete process.env.CI;
+    const config = makeConfig();
+    expect(detectProFeatures(config)).toEqual([]);
+  });
+
+  it("combines CI detection with other Pro features", () => {
+    process.env.CI = "true";
+    const config = makeConfig({
+      output: { format: "both" },
+      overlays: { top: { text: "Hi" } },
+    });
+    const features = detectProFeatures(config);
+    expect(features).toHaveLength(3);
+    expect(features).toContainEqual(
+      expect.stringContaining("Multi-format")
+    );
+    expect(features).toContainEqual(
+      expect.stringContaining("Text overlays")
+    );
+    expect(features).toContainEqual(
+      expect.stringContaining("CI/CD environment")
+    );
+  });
 });
 
 /* ─── enforceLicense ─── */
 
 describe("enforceLicense", () => {
   const originalEnv = process.env.DEMOTAPE_LICENSE_KEY;
+  const originalCI = process.env.CI;
 
   beforeEach(() => {
     delete process.env.DEMOTAPE_LICENSE_KEY;
+    delete process.env.CI;
   });
 
   afterEach(() => {
@@ -172,6 +219,11 @@ describe("enforceLicense", () => {
       process.env.DEMOTAPE_LICENSE_KEY = originalEnv;
     } else {
       delete process.env.DEMOTAPE_LICENSE_KEY;
+    }
+    if (originalCI !== undefined) {
+      process.env.CI = originalCI;
+    } else {
+      delete process.env.CI;
     }
   });
 
@@ -227,5 +279,29 @@ describe("enforceLicense", () => {
     const config = makeConfig({ output: { format: "both" } });
     // Valid key as argument should pass even though env has invalid key
     expect(() => enforceLicense(config, VALID_KEY)).not.toThrow();
+  });
+
+  it("throws for a free config in CI without a key", () => {
+    process.env.CI = "true";
+    const config = makeConfig();
+    expect(() => enforceLicense(config)).toThrow(LicenseError);
+  });
+
+  it("passes for a free config in CI with a valid key", () => {
+    process.env.CI = "true";
+    const config = makeConfig();
+    expect(() => enforceLicense(config, VALID_KEY)).not.toThrow();
+  });
+
+  it("CI error message includes repository secret hint", () => {
+    process.env.CI = "true";
+    const config = makeConfig();
+    try {
+      enforceLicense(config);
+      expect.unreachable("should have thrown");
+    } catch (err) {
+      expect(err).toBeInstanceOf(LicenseError);
+      expect((err as LicenseError).message).toContain("repository secret");
+    }
   });
 });

@@ -1,0 +1,63 @@
+name: "Demotape - Record Demo Videos"
+description: "Record polished demo videos of your web app from a JSON config"
+branding:
+  icon: "video"
+  color: "purple"
+
+inputs:
+  config:
+    description: "Path to the demotape JSON config file"
+    required: true
+  license-key:
+    description: "Demotape Pro license key (use a repository secret)"
+    required: true
+  working-directory:
+    description: "Working directory for the recording"
+    required: false
+    default: "."
+  node-version:
+    description: "Node.js version to use"
+    required: false
+    default: "20"
+  upload-artifacts:
+    description: "Upload recorded videos as workflow artifacts"
+    required: false
+    default: "true"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Setup FFmpeg
+      uses: FedericoCarboni/setup-ffmpeg@v3
+
+    - name: Install demotape
+      shell: bash
+      run: npm install -g demotape
+
+    - name: Install Playwright Chromium
+      shell: bash
+      run: npx playwright install --with-deps chromium
+
+    - name: Record demo video
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        DEMOTAPE_LICENSE_KEY: ${{ inputs.license-key }}
+        HEADLESS: "true"
+      run: demotape record --config "${{ inputs.config }}"
+
+    - name: Upload video artifacts
+      if: inputs.upload-artifacts == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: demotape-videos
+        path: |
+          ${{ inputs.working-directory }}/**/videos/**
+          ${{ inputs.working-directory }}/**/*.mp4
+          ${{ inputs.working-directory }}/**/*.webm
+        if-no-files-found: warn

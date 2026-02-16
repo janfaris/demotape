@@ -20,7 +20,7 @@ export class LicenseError extends Error {
 
   constructor(features: string[]) {
     const featureList = features.map((f) => `  - ${f}`).join("\n");
-    const message = [
+    const lines = [
       "This config uses Pro features that require a license key:",
       "",
       featureList,
@@ -30,7 +30,16 @@ export class LicenseError extends Error {
       "  export DEMOTAPE_LICENSE_KEY=DMTP-PRO-xxxx-xxxx",
       "",
       "Or: demotape record --config demo.json --license DMTP-PRO-xxxx-xxxx",
-    ].join("\n");
+    ];
+
+    if (process.env.CI) {
+      lines.push(
+        "",
+        "In CI/CD, set DEMOTAPE_LICENSE_KEY as a repository secret."
+      );
+    }
+
+    const message = lines.join("\n");
 
     super(message);
     this.name = "LicenseError";
@@ -100,6 +109,10 @@ export function detectProFeatures(config: DemotapeConfig): string[] {
 
   if (config.auth?.provider === "supabase") {
     features.push('Supabase auth (auth.provider = "supabase")');
+  }
+
+  if (process.env.CI) {
+    features.push("CI/CD environment (CI env var detected)");
   }
 
   return features;

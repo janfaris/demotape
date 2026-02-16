@@ -1,6 +1,6 @@
 {
   "name": "demotape",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Record polished demo videos of your web app from a JSON config",
   "type": "module",
   "bin": {
