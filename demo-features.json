@@ -1,0 +1,61 @@
+{
+  "baseUrl": "https://cal.com",
+  "viewport": { "width": 1280, "height": 720 },
+  "output": {
+    "format": "mp4",
+    "name": "cal-demo",
+    "dir": "./videos",
+    "fps": 30,
+    "crf": 23
+  },
+  "colorScheme": "dark",
+  "removeDevOverlays": true,
+  "suppressAnimations": true,
+  "narration": {
+    "auto": true,
+    "voice": "marin",
+    "speed": 0.9,
+    "instructions": "You are recording a voiceover for a 20-second product demo video. Speak in a warm, grounded, conversational tone — like a founder casually showing their product to a friend over coffee. Do NOT sound like an announcer or narrator. Keep your energy calm and confident. Pause naturally between thoughts. Let the words breathe. No rush."
+  },
+  "transitions": {
+    "type": "fade",
+    "duration": 0.5
+  },
+  "cursor": {
+    "size": 22,
+    "color": "rgba(255,255,255,0.85)",
+    "clickEffect": true
+  },
+  "segments": [
+    {
+      "name": "Homepage",
+      "path": "/",
+      "waitFor": "h1",
+      "settleMs": 3000,
+      "dwellMs": 3000,
+      "scroll": { "distance": 400, "duration": 2500 },
+      "actions": [
+        { "type": "hover", "selector": "a[href*='signup']", "delay": 500 }
+      ]
+    },
+    {
+      "name": "How It Works",
+      "path": "/#how-it-works",
+      "waitFor": "h1",
+      "settleMs": 3000,
+      "dwellMs": 3000,
+      "scroll": { "distance": 600, "duration": 3000 }
+    },
+    {
+      "name": "Pricing",
+      "path": "/pricing",
+      "waitFor": "h1",
+      "settleMs": 3000,
+      "dwellMs": 3000,
+      "scroll": { "distance": 500, "duration": 2500 },
+      "actions": [
+        { "type": "click", "selector": "a[href*='signup']", "delay": 800 }
+      ]
+    }
+  ]
+}

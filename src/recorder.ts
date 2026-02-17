@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-import { mkdirSync, rmSync } from "fs";
+import { mkdirSync, rmSync, writeFileSync } from "fs";
 import { resolve } from "path";
 import type { DemotapeConfig } from "./config.js";
 import { authenticate, applyAuth } from "./auth/index.js";
@@ -11,6 +11,12 @@ import {
   injectOverlayAndAnimationSuppressions,
 } from "./utils.js";
 import { enforceLicense } from "./license.js";
+import { resolveCursorConfig } from "./cursor.js";
+import {
+  getSegmentDuration,
+  buildSubtitleEntries,
+  generateSrt,
+} from "./subtitles.js";
 
 export interface RecordOptions {
   licenseKey?: string;
@@ -161,10 +167,22 @@ export async function record(
   console.log("-> Recording segments...\n");
   const segments: SegmentResult[] = [];
 
+  // Resolve visual readiness options
+  const visualReadiness = config.visualReadiness === true
+    ? {}
+    : config.visualReadiness === false
+      ? undefined
+      : config.visualReadiness;
+
+  // Resolve cursor config
+  const cursorConfig = resolveCursorConfig(config.cursor);
+
   for (const segment of config.segments) {
     const result = await recordSegment(context, segment, config.baseUrl, {
       removeOverlays: config.removeDevOverlays,
       fps: config.output.fps,
+      visualReadiness,
+      cursor: cursorConfig,
     });
     segments.push(result);
   }
@@ -176,17 +194,81 @@ export async function record(
     throw new Error("No segments were recorded");
   }
 
-  // ─── 6. FFmpeg: trim + concat + encode ───
+  // ─── 5.5. Auto-narration (generate scripts from video frames) ───
+  const needsAutoNarration =
+    config.narration?.auto ||
+    config.segments.some((s) => s.narration?.auto);
+
+  if (needsAutoNarration) {
+    console.log("\n-> Auto-generating narration scripts...\n");
+    const { autoNarrateSegments } = await import("./ai/auto-narrate.js");
+    // Extract app name from baseUrl for context
+    let appName: string | undefined;
+    try {
+      appName = new URL(config.baseUrl).hostname.replace(/^www\./, "");
+    } catch {}
+    await autoNarrateSegments(
+      { segments, autoAll: !!config.narration?.auto, appName },
+      config.segments
+    );
+  }
+
+  // ─── 6. Narration TTS (if any segment has a script) ───
+  let audioPath: string | undefined;
+  const hasNarration =
+    config.narration || segments.some((s) => s.narrationScript);
+
+  if (hasNarration) {
+    console.log("\n-> Generating narration...\n");
+    const { generateNarration } = await import("./ai/narration.js");
+    const narrationResult = await generateNarration({
+      segments,
+      narrationConfig: config.narration,
+      outputDir: recordingDir,
+    });
+    audioPath = narrationResult.concatenatedPath;
+  }
+
+  // ─── 6.5. Compute segment durations (needed for subtitles + transitions) ───
+  const segmentDurations = segments.map((s) =>
+    getSegmentDuration(s.videoPath, s.trimSec)
+  );
+
+  // ─── 6.6. Subtitles ───
+  let subtitlesSrtPath: string | undefined;
+
+  if (config.subtitles) {
+    const entries = buildSubtitleEntries(segments, segmentDurations);
+    if (entries.length > 0) {
+      const srtContent = generateSrt(entries);
+      subtitlesSrtPath = resolve(outputDir, `${config.output.name}.srt`);
+      writeFileSync(subtitlesSrtPath, srtContent);
+      console.log(`\n-> Subtitles: ${entries.length} entries -> ${subtitlesSrtPath}`);
+    }
+  }
+
+  // ─── 7. FFmpeg: trim + concat/transitions + subtitles + overlays + encode ───
   console.log("\n-> Encoding with FFmpeg...\n");
+
+  // Collect per-segment transition configs
+  const perSegmentTransitions = config.segments.map((s) => s.transition);
+  const hasTransitions =
+    config.transitions || perSegmentTransitions.some((t) => t !== undefined);
 
   const results = encode({
     segments,
     output: config.output,
     viewport: config.viewport,
     overlays: config.overlays,
+    audioPath,
+    transitions: config.transitions,
+    perSegmentTransitions: hasTransitions ? perSegmentTransitions : undefined,
+    segmentDurations,
+    subtitlesSrtPath,
+    subtitlesConfig: config.subtitles,
   });
 
-  // ─── 7. Report ───
+  // ─── 8. Report ───
   console.log("\nDone!");
   for (const file of results.files) {
     console.log(`   ${file.format.toUpperCase()}: ${file.path} (${file.sizeMB} MB)`);

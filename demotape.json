@@ -1,0 +1,63 @@
+{
+  "baseUrl": "https://cal.com",
+  "viewport": {
+    "width": 1280,
+    "height": 800
+  },
+  "output": {
+    "format": "mp4",
+    "fps": 30,
+    "crf": 28,
+    "name": "demo",
+    "dir": "./videos"
+  },
+  "colorScheme": "light",
+  "removeDevOverlays": true,
+  "suppressAnimations": true,
+  "segments": [
+    {
+      "name": "Home: The better way to schedule your meetings",
+      "path": "/",
+      "waitFor": "h1",
+      "settleMs": 1500,
+      "scroll": {
+        "distance": 800,
+        "duration": 2500
+      },
+      "dwellMs": 2000
+    },
+    {
+      "name": "Teams: Simple scheduling for teams",
+      "path": "/teams",
+      "waitFor": "h1",
+      "settleMs": 1500,
+      "scroll": {
+        "distance": 700,
+        "duration": 2500
+      },
+      "dwellMs": 1800
+    },
+    {
+      "name": "Enterprise: Secure scheduling infrastructure for enterprise teams",
+      "path": "/enterprise",
+      "waitFor": "h1",
+      "settleMs": 1500,
+      "scroll": {
+        "distance": 900,
+        "duration": 2500
+      },
+      "dwellMs": 2000
+    },
+    {
+      "name": "Platform: Add Cal.com's react components to your application",
+      "path": "/platform",
+      "waitFor": "h1",
+      "settleMs": 1500,
+      "scroll": {
+        "distance": 700,
+        "duration": 2500
+      },
+      "dwellMs": 1800
+    }
+  ]
+}

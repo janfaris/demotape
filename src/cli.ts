@@ -74,7 +74,7 @@ export function createCLI(): Command {
   program
     .name("demotape")
     .description("Record polished demo videos of your web app from a JSON config")
-    .version("0.1.0");
+    .version("0.4.0");
 
   // ─── record ───
   program
@@ -134,6 +134,53 @@ export function createCLI(): Command {
       console.log(`  2. Run: demotape record --config ${opts.output}`);
     });
 
+  // ─── generate ───
+  program
+    .command("generate")
+    .description("Generate a config by analyzing a live URL with AI (Pro)")
+    .requiredOption("-u, --url <url>", "URL to analyze")
+    .option("-d, --describe <text>", "Describe the app for better results")
+    .option("-o, --output <path>", "Output file path", "demotape.json")
+    .option("--license <key>", "Pro license key (or set DEMOTAPE_LICENSE_KEY)")
+    .action(async (opts) => {
+      try {
+        // License check — generate is always Pro
+        const key = opts.license || process.env.DEMOTAPE_LICENSE_KEY;
+        if (!key || !validateLicenseKey(key)) {
+          console.error(
+            "Error: demotape generate requires a Pro license key.\n\n" +
+              "  Get a key at https://demotape.dev/pro\n\n" +
+              "  export DEMOTAPE_LICENSE_KEY=DMTP-PRO-xxxx-xxxx\n" +
+              "  Or: demotape generate --url <url> --license DMTP-PRO-xxxx-xxxx"
+          );
+          process.exit(1);
+        }
+
+        const outputPath = resolve(opts.output);
+        if (existsSync(outputPath)) {
+          console.error(`File already exists: ${outputPath}\nUse a different --output path or remove the existing file.`);
+          process.exit(1);
+        }
+
+        const { generateConfig } = await import("./ai/generate.js");
+        const config = await generateConfig({
+          url: opts.url,
+          describe: opts.describe,
+        });
+
+        writeFileSync(outputPath, JSON.stringify(config, null, 2) + "\n");
+        console.log(`\nConfig written to ${outputPath}`);
+        console.log(`\nNext steps:`);
+        console.log(`  1. Review and tweak ${opts.output}`);
+        console.log(`  2. Run: demotape record --config ${opts.output}`);
+      } catch (err) {
+        console.error(
+          `Error: ${err instanceof Error ? err.message : String(err)}`
+        );
+        process.exit(1);
+      }
+    });
+
   // ─── validate ───
   program
     .command("validate")
@@ -157,6 +204,15 @@ export function createCLI(): Command {
         if (config.overlays) {
           if (config.overlays.top) console.log(`  Top overlay: "${config.overlays.top.text}"`);
           if (config.overlays.bottom) console.log(`  Bottom overlay: "${config.overlays.bottom.text}"`);
+        }
+        if (config.subtitles) {
+          console.log(`  Subtitles: enabled${config.subtitles.burn ? " (burn-in)" : " (SRT file)"}`);
+        }
+        if (config.transitions) {
+          console.log(`  Transitions: ${config.transitions.type} (${config.transitions.duration}s)`);
+        }
+        if (config.cursor) {
+          console.log(`  Cursor: animated`);
         }
 
         // Pro feature detection

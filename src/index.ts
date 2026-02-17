@@ -9,6 +9,9 @@ export {
   type AuthConfig,
   type OutputConfig,
   type OverlayConfig,
+  type SubtitlesConfig,
+  type TransitionConfig,
+  type CursorConfig,
 } from "./config.js";
 export { createCLI } from "./cli.js";
 export {
@@ -17,3 +20,43 @@ export {
   detectProFeatures,
   LicenseError,
 } from "./license.js";
+
+// AI features
+export { generateConfig, type GenerateOptions } from "./ai/generate.js";
+export { generateNarration, type NarrationResult } from "./ai/narration.js";
+export {
+  autoNarrateSegments,
+  extractFrameAsBase64,
+  generateNarrationScript,
+} from "./ai/auto-narrate.js";
+export {
+  compareScreenshots,
+  waitForVisualReadiness,
+  type VisualReadinessOptions,
+} from "./ai/visual-readiness.js";
+
+// Subtitles
+export {
+  formatSrtTimestamp,
+  generateSrt,
+  getSegmentDuration,
+  splitIntoChunks,
+  buildSubtitleEntries,
+  buildSubtitleFilter,
+  type SrtEntry,
+} from "./subtitles.js";
+
+// Transitions
+export {
+  buildTransitionFilter,
+  computeTotalDurationWithTransitions,
+} from "./transitions.js";
+
+// Cursor
+export {
+  resolveCursorConfig,
+  getCursorInjectionScript,
+  getCursorMoveScript,
+  getCursorClickScript,
+  type CursorOptions,
+} from "./cursor.js";

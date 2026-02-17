@@ -58,6 +58,24 @@ const ActionSchema = z.object({
   delay: z.number().optional(),
 });
 
+const SegmentNarrationSchema = z.object({
+  script: z.string().optional(),
+  auto: z.boolean().optional(),
+});
+
+const XFADE_TYPES = [
+  "fade", "wipeleft", "wiperight", "wipeup", "wipedown",
+  "slideleft", "slideright", "slideup", "slidedown",
+  "circlecrop", "rectcrop", "distance", "fadeblack", "fadewhite",
+  "radial", "smoothleft", "smoothright", "smoothup", "smoothdown",
+  "circleopen", "circleclose", "vertopen", "vertclose",
+] as const;
+
+const TransitionConfigSchema = z.object({
+  type: z.enum(XFADE_TYPES).default("fade"),
+  duration: z.number().min(0.1).max(5).default(0.5),
+});
+
 const SegmentSchema = z.object({
   name: z.string(),
   path: z.string(),
@@ -71,12 +89,60 @@ const SegmentSchema = z.object({
     .optional(),
   dwellMs: z.number().default(2000),
   actions: z.array(ActionSchema).optional(),
+  narration: SegmentNarrationSchema.optional(),
+  transition: TransitionConfigSchema.optional(),
 });
 
 const SetupSchema = z.object({
   localStorage: z.record(z.string()).optional(),
   waitAfterSetup: z.number().optional(),
 });
+
+const VisualReadinessConfigSchema = z.object({
+  intervalMs: z.number().positive().default(200),
+  threshold: z.number().min(0).max(1).default(0.001),
+  maxWaitMs: z.number().positive().default(10000),
+  consecutiveStable: z.number().int().positive().default(2),
+});
+
+const VisualReadinessSchema = z.union([
+  z.boolean(),
+  VisualReadinessConfigSchema,
+]);
+
+const NarrationVoiceSchema = z.enum([
+  "alloy", "ash", "ballad", "coral", "echo", "fable",
+  "onyx", "nova", "sage", "shimmer", "verse", "marin", "cedar",
+]);
+
+const NarrationSchema = z.object({
+  voice: NarrationVoiceSchema.default("coral"),
+  speed: z.number().min(0.25).max(4.0).default(1.0),
+  model: z.enum(["gpt-4o-mini-tts", "tts-1", "tts-1-hd"]).default("gpt-4o-mini-tts"),
+  instructions: z.string().optional(),
+  auto: z.boolean().optional(),
+});
+
+const SubtitleStyleSchema = z.object({
+  fontSize: z.number().int().positive().optional(),
+  fontColor: z.string().optional(),
+  bgColor: z.string().optional(),
+  position: z.enum(["bottom", "top"]).default("bottom"),
+});
+
+const SubtitlesSchema = z.object({
+  enabled: z.boolean().default(true),
+  burn: z.boolean().default(false),
+  style: SubtitleStyleSchema.optional(),
+});
+
+const CursorOptionsSchema = z.object({
+  size: z.number().int().positive().default(20),
+  color: z.string().default("rgba(0,0,0,0.8)"),
+  clickEffect: z.boolean().default(true),
+});
+
+const CursorSchema = z.union([z.boolean(), CursorOptionsSchema]);
 
 export const DemotapeConfigSchema = z.object({
   baseUrl: z.string().url(),
@@ -88,6 +154,11 @@ export const DemotapeConfigSchema = z.object({
   suppressAnimations: z.boolean().default(true),
   setup: SetupSchema.optional(),
   overlays: OverlaysSchema.optional(),
+  visualReadiness: VisualReadinessSchema.optional(),
+  narration: NarrationSchema.optional(),
+  subtitles: SubtitlesSchema.optional(),
+  transitions: TransitionConfigSchema.optional(),
+  cursor: CursorSchema.optional(),
   segments: z.array(SegmentSchema).min(1, "At least one segment is required"),
 });
 
@@ -98,6 +169,9 @@ export type Segment = z.infer<typeof SegmentSchema>;
 export type AuthConfig = z.infer<typeof AuthSchema>;
 export type OutputConfig = z.infer<typeof OutputSchema>;
 export type OverlayConfig = z.infer<typeof OverlaysSchema>;
+export type SubtitlesConfig = z.infer<typeof SubtitlesSchema>;
+export type TransitionConfig = z.infer<typeof TransitionConfigSchema>;
+export type CursorConfig = z.infer<typeof CursorSchema>;
 
 /* ─── Loader ─── */
 

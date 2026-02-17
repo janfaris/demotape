@@ -1,0 +1,34 @@
+{
+  "baseUrl": "https://cal.com",
+  "viewport": { "width": 1280, "height": 800 },
+  "output": { "format": "mp4", "name": "cal-narrated" },
+  "colorScheme": "light",
+  "visualReadiness": true,
+  "narration": {
+    "voice": "coral",
+    "speed": 1.0,
+    "instructions": "Speak in a friendly, professional tone like a product demo narrator."
+  },
+  "segments": [
+    {
+      "name": "Home",
+      "path": "/",
+      "waitFor": "h1",
+      "scroll": { "distance": 800, "duration": 2500 },
+      "dwellMs": 3000,
+      "narration": {
+        "script": "Welcome to Cal.com — the better way to schedule your meetings. Built for modern teams, Cal.com makes scheduling effortless."
+      }
+    },
+    {
+      "name": "Teams",
+      "path": "/teams",
+      "waitFor": "h1",
+      "scroll": { "distance": 700, "duration": 2500 },
+      "dwellMs": 2500,
+      "narration": {
+        "script": "With Cal.com for Teams, everyone stays in sync. Round-robin scheduling, collective availability, and seamless integrations."
+      }
+    }
+  ]
+}

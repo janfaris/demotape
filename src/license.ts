@@ -111,6 +111,29 @@ export function detectProFeatures(config: DemotapeConfig): string[] {
     features.push('Supabase auth (auth.provider = "supabase")');
   }
 
+  if (config.visualReadiness) {
+    features.push("Visual readiness detection (visualReadiness)");
+  }
+
+  if (
+    config.narration ||
+    config.segments.some((s) => s.narration)
+  ) {
+    features.push("AI narration (narration)");
+  }
+
+  if (config.subtitles) {
+    features.push("Subtitles/captions (subtitles)");
+  }
+
+  if (config.transitions || config.segments.some((s) => s.transition)) {
+    features.push("Segment transitions (transitions)");
+  }
+
+  if (config.cursor) {
+    features.push("Cursor animation (cursor)");
+  }
+
   if (process.env.CI) {
     features.push("CI/CD environment (CI env var detected)");
   }

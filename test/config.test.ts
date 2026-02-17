@@ -166,4 +166,180 @@ describe("DemotapeConfigSchema", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  // ─── Subtitles ───
+
+  it("accepts subtitles config with defaults", () => {
+    const result = DemotapeConfigSchema.safeParse({
+      baseUrl: "http://localhost:3000",
+      subtitles: {},
+      segments: [{ name: "Home", path: "/" }],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.subtitles?.enabled).toBe(true);
+      expect(result.data.subtitles?.burn).toBe(false);
+    }
+  });
+
+  it("accepts subtitles with burn-in and style", () => {
+    const result = DemotapeConfigSchema.safeParse({
+      baseUrl: "http://localhost:3000",
+      subtitles: {
+        enabled: true,
+        burn: true,
+        style: { fontSize: 36, position: "top" },
+      },
+      segments: [{ name: "Home", path: "/" }],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.subtitles?.burn).toBe(true);
+      expect(result.data.subtitles?.style?.fontSize).toBe(36);
+      expect(result.data.subtitles?.style?.position).toBe("top");
+    }
+  });
+
+  // ─── Transitions ───
+
+  it("accepts global transitions config", () => {
+    const result = DemotapeConfigSchema.safeParse({
+      baseUrl: "http://localhost:3000",
+      transitions: { type: "fade", duration: 0.5 },
+      segments: [{ name: "Home", path: "/" }],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.transitions?.type).toBe("fade");
+      expect(result.data.transitions?.duration).toBe(0.5);
+    }
+  });
+
+  it("accepts per-segment transitions", () => {
+    const result = DemotapeConfigSchema.safeParse({
+      baseUrl: "http://localhost:3000",
+      segments: [
+        {
+          name: "Home",
+          path: "/",
+          transition: { type: "wipeleft", duration: 1.0 },
+        },
+        { name: "About", path: "/about" },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.segments[0].transition?.type).toBe("wipeleft");
+      expect(result.data.segments[1].transition).toBeUndefined();
+    }
+  });
+
+  it("applies transition defaults", () => {
+    const result = DemotapeConfigSchema.safeParse({
+      baseUrl: "http://localhost:3000",
+      transitions: {},
+      segments: [{ name: "Home", path: "/" }],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.transitions?.type).toBe("fade");
+      expect(result.data.transitions?.duration).toBe(0.5);
+    }
+  });
+
+  it("rejects invalid transition type", () => {
+    const result = DemotapeConfigSchema.safeParse({
+      baseUrl: "http://localhost:3000",
+      transitions: { type: "dissolve" },
+      segments: [{ name: "Home", path: "/" }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects transition duration out of range", () => {
+    const result = DemotapeConfigSchema.safeParse({
+      baseUrl: "http://localhost:3000",
+      transitions: { type: "fade", duration: 10 },
+      segments: [{ name: "Home", path: "/" }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  // ─── Cursor ───
+
+  it("accepts cursor as boolean true", () => {
+    const result = DemotapeConfigSchema.safeParse({
+      baseUrl: "http://localhost:3000",
+      cursor: true,
+      segments: [{ name: "Home", path: "/" }],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.cursor).toBe(true);
+    }
+  });
+
+  it("accepts cursor as boolean false", () => {
+    const result = DemotapeConfigSchema.safeParse({
+      baseUrl: "http://localhost:3000",
+      cursor: false,
+      segments: [{ name: "Home", path: "/" }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts cursor as object with options", () => {
+    const result = DemotapeConfigSchema.safeParse({
+      baseUrl: "http://localhost:3000",
+      cursor: { size: 30, color: "red", clickEffect: false },
+      segments: [{ name: "Home", path: "/" }],
+    });
+    expect(result.success).toBe(true);
+    if (result.success && typeof result.data.cursor === "object") {
+      expect(result.data.cursor.size).toBe(30);
+      expect(result.data.cursor.color).toBe("red");
+      expect(result.data.cursor.clickEffect).toBe(false);
+    }
+  });
+
+  // ─── Auto-narration ───
+
+  it("accepts segment narration with auto flag", () => {
+    const result = DemotapeConfigSchema.safeParse({
+      baseUrl: "http://localhost:3000",
+      segments: [
+        { name: "Home", path: "/", narration: { auto: true } },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.segments[0].narration?.auto).toBe(true);
+    }
+  });
+
+  it("accepts segment narration with script only (no auto)", () => {
+    const result = DemotapeConfigSchema.safeParse({
+      baseUrl: "http://localhost:3000",
+      segments: [
+        { name: "Home", path: "/", narration: { script: "Hello" } },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.segments[0].narration?.script).toBe("Hello");
+      expect(result.data.segments[0].narration?.auto).toBeUndefined();
+    }
+  });
+
+  it("accepts top-level narration with auto flag", () => {
+    const result = DemotapeConfigSchema.safeParse({
+      baseUrl: "http://localhost:3000",
+      narration: { auto: true },
+      segments: [{ name: "Home", path: "/" }],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.narration?.auto).toBe(true);
+    }
+  });
 });

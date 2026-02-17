@@ -158,6 +158,55 @@ describe("detectProFeatures", () => {
     expect(detectProFeatures(config)).toEqual([]);
   });
 
+  it("detects subtitles as Pro feature", () => {
+    delete process.env.CI;
+    const config = makeConfig({ subtitles: { enabled: true } });
+    const features = detectProFeatures(config);
+    expect(features).toContainEqual(expect.stringContaining("Subtitles"));
+  });
+
+  it("detects global transitions as Pro feature", () => {
+    delete process.env.CI;
+    const config = makeConfig({ transitions: { type: "fade", duration: 0.5 } });
+    const features = detectProFeatures(config);
+    expect(features).toContainEqual(expect.stringContaining("transitions"));
+  });
+
+  it("detects per-segment transitions as Pro feature", () => {
+    delete process.env.CI;
+    const config = makeConfig({
+      segments: [
+        { name: "A", path: "/a", transition: { type: "fade", duration: 0.5 } },
+        { name: "B", path: "/b" },
+      ],
+    });
+    const features = detectProFeatures(config);
+    expect(features).toContainEqual(expect.stringContaining("transitions"));
+  });
+
+  it("detects cursor as Pro feature", () => {
+    delete process.env.CI;
+    const config = makeConfig({ cursor: true });
+    const features = detectProFeatures(config);
+    expect(features).toContainEqual(expect.stringContaining("Cursor"));
+  });
+
+  it("detects cursor object config as Pro feature", () => {
+    delete process.env.CI;
+    const config = makeConfig({ cursor: { size: 30 } });
+    const features = detectProFeatures(config);
+    expect(features).toContainEqual(expect.stringContaining("Cursor"));
+  });
+
+  it("detects narration with auto flag", () => {
+    delete process.env.CI;
+    const config = makeConfig({
+      segments: [{ name: "Home", path: "/", narration: { auto: true } }],
+    });
+    const features = detectProFeatures(config);
+    expect(features).toContainEqual(expect.stringContaining("narration"));
+  });
+
   it("detects multiple Pro features at once", () => {
     delete process.env.CI;
     const config = makeConfig({
