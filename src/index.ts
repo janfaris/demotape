@@ -12,6 +12,7 @@ export {
   type SubtitlesConfig,
   type TransitionConfig,
   type CursorConfig,
+  type ThemeConfig,
 } from "./config.js";
 export { createCLI } from "./cli.js";
 export {
@@ -58,5 +59,14 @@ export {
   getCursorInjectionScript,
   getCursorMoveScript,
   getCursorClickScript,
+  getCursorZoomInScript,
+  getCursorZoomOutScript,
   type CursorOptions,
 } from "./cursor.js";
+
+// Theme
+export {
+  resolveTheme,
+  buildThemeFilter,
+  type ThemeOptions,
+} from "./theme.js";

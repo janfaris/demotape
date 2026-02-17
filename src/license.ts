@@ -134,6 +134,14 @@ export function detectProFeatures(config: DemotapeConfig): string[] {
     features.push("Cursor animation (cursor)");
   }
 
+  if (config.theme && config.theme !== "raw") {
+    features.push("Showcase theme (theme)");
+  }
+
+  if (config.renderer === "remotion") {
+    features.push("Remotion renderer (renderer = \"remotion\")");
+  }
+
   if (process.env.CI) {
     features.push("CI/CD environment (CI env var detected)");
   }

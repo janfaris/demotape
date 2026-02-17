@@ -140,9 +140,23 @@ const CursorOptionsSchema = z.object({
   size: z.number().int().positive().default(20),
   color: z.string().default("rgba(0,0,0,0.8)"),
   clickEffect: z.boolean().default(true),
+  hoverZoom: z.number().min(1).max(2).optional(), // e.g. 1.25 — zoom into action target
 });
 
 const CursorSchema = z.union([z.boolean(), CursorOptionsSchema]);
+
+const ThemeOptionsSchema = z.object({
+  background: z.string().default("#0a0a0a"),
+  padding: z.number().min(0).max(0.3).default(0.10), // fraction of output size
+  radius: z.number().int().min(0).default(16),
+  shadow: z.boolean().default(true),
+  windowChrome: z.boolean().default(false), // macOS-style title bar
+});
+
+const ThemeSchema = z.union([
+  z.enum(["raw", "showcase"]),
+  ThemeOptionsSchema,
+]);
 
 export const DemotapeConfigSchema = z.object({
   baseUrl: z.string().url(),
@@ -159,6 +173,8 @@ export const DemotapeConfigSchema = z.object({
   subtitles: SubtitlesSchema.optional(),
   transitions: TransitionConfigSchema.optional(),
   cursor: CursorSchema.optional(),
+  theme: ThemeSchema.optional(),
+  renderer: z.enum(["ffmpeg", "remotion"]).default("ffmpeg"),
   segments: z.array(SegmentSchema).min(1, "At least one segment is required"),
 });
 
@@ -172,6 +188,7 @@ export type OverlayConfig = z.infer<typeof OverlaysSchema>;
 export type SubtitlesConfig = z.infer<typeof SubtitlesSchema>;
 export type TransitionConfig = z.infer<typeof TransitionConfigSchema>;
 export type CursorConfig = z.infer<typeof CursorSchema>;
+export type ThemeConfig = z.infer<typeof ThemeSchema>;
 
 /* ─── Loader ─── */
 

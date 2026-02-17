@@ -1,0 +1,46 @@
+{
+  "baseUrl": "http://localhost:3456",
+  "viewport": { "width": 1280, "height": 720 },
+  "output": {
+    "format": "mp4",
+    "name": "demotape-demo",
+    "dir": "./videos",
+    "fps": 30,
+    "crf": 18
+  },
+  "colorScheme": "dark",
+  "removeDevOverlays": false,
+  "suppressAnimations": true,
+  "transitions": {
+    "type": "fade",
+    "duration": 0.4
+  },
+  "theme": "showcase",
+  "renderer": "remotion",
+  "cursor": {
+    "size": 24,
+    "color": "rgba(255,255,255,0.9)",
+    "clickEffect": true,
+    "hoverZoom": 1.8
+  },
+  "segments": [
+    {
+      "name": "Hero + Terminal + Comparison",
+      "path": "/",
+      "waitFor": "h1",
+      "settleMs": 2000,
+      "dwellMs": 1500,
+      "scroll": { "distance": 1400, "duration": 5000 }
+    },
+    {
+      "name": "Pricing CTA",
+      "path": "/#pricing",
+      "waitFor": "#pricing h2",
+      "settleMs": 1500,
+      "dwellMs": 2000,
+      "actions": [
+        { "type": "hover", "selector": ".pricing-popular a", "delay": 400 }
+      ]
+    }
+  ]
+}

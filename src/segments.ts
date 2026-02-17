@@ -8,6 +8,8 @@ import {
   getCursorInjectionScript,
   getCursorMoveScript,
   getCursorClickScript,
+  getCursorZoomInScript,
+  getCursorZoomOutScript,
 } from "./cursor.js";
 
 export interface SegmentResult {
@@ -84,7 +86,7 @@ export async function recordSegment(
     await page.evaluate(getCursorInjectionScript(options.cursor));
   }
 
-  // Execute actions (click, hover) with optional cursor animation
+  // Execute actions (click, hover) with optional cursor animation + zoom
   if (actions) {
     for (const action of actions) {
       if (action.delay) {
@@ -92,6 +94,7 @@ export async function recordSegment(
       }
 
       // Animate cursor to target element before action
+      let actionCenter: { cx: number; cy: number } | null = null;
       if (options.cursor) {
         const box = await page
           .locator(action.selector)
@@ -101,9 +104,23 @@ export async function recordSegment(
         if (box) {
           const cx = box.x + box.width / 2;
           const cy = box.y + box.height / 2;
+          actionCenter = { cx, cy };
           await page.evaluate(getCursorMoveScript(cx, cy));
           await page.waitForTimeout(650); // wait for CSS transition (600ms) + buffer
         }
+      }
+
+      // Zoom into the target area (cinematic hover-zoom effect)
+      const shouldZoom = options.cursor?.hoverZoom && actionCenter;
+      if (shouldZoom) {
+        await page.evaluate(
+          getCursorZoomInScript(
+            actionCenter!.cx,
+            actionCenter!.cy,
+            options.cursor!.hoverZoom!
+          )
+        );
+        await page.waitForTimeout(900); // wait for zoom transition (800ms) + buffer
       }
 
       if (action.type === "click") {
@@ -114,6 +131,13 @@ export async function recordSegment(
         await page.click(action.selector);
       } else if (action.type === "hover") {
         await page.hover(action.selector);
+      }
+
+      // Hold the zoom briefly, then ease back out
+      if (shouldZoom) {
+        await page.waitForTimeout(800); // hold the zoomed view
+        await page.evaluate(getCursorZoomOutScript());
+        await page.waitForTimeout(700); // wait for zoom out (600ms) + buffer
       }
     }
   }

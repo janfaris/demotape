@@ -13,6 +13,7 @@ export interface CursorOptions {
   size: number;
   color: string;
   clickEffect: boolean;
+  hoverZoom?: number; // e.g. 1.25 — zoom into the action target area
 }
 
 const CURSOR_ID = "__demotape-cursor";
@@ -32,6 +33,7 @@ export function resolveCursorConfig(
     size: cursor.size ?? 20,
     color: cursor.color ?? "rgba(0,0,0,0.8)",
     clickEffect: cursor.clickEffect ?? true,
+    hoverZoom: cursor.hoverZoom,
   };
 }
 
@@ -115,5 +117,37 @@ export function getCursorClickScript(): string {
       ripple.style.opacity = '0';
       ripple.style.transform = 'scale(0.5)';
     }, 300);
+  })()`;
+}
+
+/**
+ * Returns a JS string to smoothly zoom the page centered on a viewport point.
+ *
+ * Uses CSS transform on <html> for a layout-free cinematic zoom.
+ * Accounts for scroll position so the zoom centers on the correct spot.
+ */
+export function getCursorZoomInScript(
+  viewportX: number,
+  viewportY: number,
+  zoom: number
+): string {
+  return `(() => {
+    const sx = window.scrollX;
+    const sy = window.scrollY;
+    const html = document.documentElement;
+    html.style.transition = 'transform 800ms cubic-bezier(0.22, 0.61, 0.36, 1)';
+    html.style.transformOrigin = (${viewportX} + sx) + 'px ' + (${viewportY} + sy) + 'px';
+    html.style.transform = 'scale(${zoom})';
+  })()`;
+}
+
+/**
+ * Returns a JS string to smoothly zoom back out to normal scale.
+ */
+export function getCursorZoomOutScript(): string {
+  return `(() => {
+    const html = document.documentElement;
+    html.style.transition = 'transform 600ms cubic-bezier(0.22, 0.61, 0.36, 1)';
+    html.style.transform = 'scale(1)';
   })()`;
 }

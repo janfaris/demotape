@@ -84,6 +84,7 @@ export function createCLI(): Command {
     .option("--format <format>", "Output format override (mp4, webm, both)")
     .option("--output <dir>", "Output directory override")
     .option("--license <key>", "Pro license key (or set DEMOTAPE_LICENSE_KEY)")
+    .option("--renderer <engine>", "Rendering engine: ffmpeg (default) or remotion (Pro)")
     .action(async (opts) => {
       try {
         const config = loadConfig(opts.config);
@@ -94,6 +95,9 @@ export function createCLI(): Command {
         }
         if (opts.output) {
           config.output.dir = opts.output;
+        }
+        if (opts.renderer) {
+          config.renderer = opts.renderer;
         }
 
         enforceLicense(config, opts.license);

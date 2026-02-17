@@ -1,0 +1,52 @@
+{
+  "baseUrl": "http://localhost:3000",
+  "viewport": { "width": 1280, "height": 720 },
+  "output": {
+    "format": "mp4",
+    "name": "vantage-demo",
+    "dir": "./videos",
+    "fps": 30,
+    "crf": 18
+  },
+  "colorScheme": "dark",
+  "removeDevOverlays": true,
+  "suppressAnimations": true,
+  "auth": {
+    "provider": "supabase",
+    "supabaseUrl": "https://oyilpgqigjpfjgalvynn.supabase.co",
+    "email": "jankarlo.faris@Outlook.com"
+  },
+  "transitions": {
+    "type": "fade",
+    "duration": 0.4
+  },
+  "theme": "showcase",
+  "renderer": "remotion",
+  "cursor": {
+    "size": 24,
+    "color": "rgba(255,255,255,0.9)",
+    "clickEffect": true,
+    "hoverZoom": 1.8
+  },
+  "segments": [
+    {
+      "name": "Listings Grid",
+      "path": "/en/dashboard/listings",
+      "waitFor": "a[href*='/dashboard/listings/']",
+      "settleMs": 3000,
+      "dwellMs": 2000,
+      "scroll": { "distance": 300, "duration": 1500 },
+      "actions": [
+        { "type": "hover", "selector": "a[href*='/dashboard/listings/']", "delay": 400 }
+      ]
+    },
+    {
+      "name": "Listing Detail",
+      "path": "/en/dashboard/listings/3e72fd42-9f2b-4e04-8a09-543f3c5b0c0b",
+      "waitFor": "img",
+      "settleMs": 3000,
+      "dwellMs": 2000,
+      "scroll": { "distance": 800, "duration": 4000 }
+    }
+  ]
+}

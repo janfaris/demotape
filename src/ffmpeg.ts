@@ -1,11 +1,12 @@
 import { execSync } from "child_process";
 import { readFileSync } from "fs";
-import type { OutputConfig, OverlayConfig, TransitionConfig } from "./config.js";
+import type { OutputConfig, OverlayConfig, TransitionConfig, ThemeConfig } from "./config.js";
 import type { SegmentResult } from "./segments.js";
 import { buildOverlayFilters } from "./overlays.js";
 import { buildTransitionFilter } from "./transitions.js";
 import { buildSubtitleFilter, type SrtEntry } from "./subtitles.js";
 import type { SubtitlesConfig } from "./config.js";
+import { resolveTheme, buildThemeFilter } from "./theme.js";
 
 interface EncodeOptions {
   segments: SegmentResult[];
@@ -18,6 +19,7 @@ interface EncodeOptions {
   segmentDurations?: number[];
   subtitlesSrtPath?: string;
   subtitlesConfig?: SubtitlesConfig;
+  theme?: ThemeConfig;
 }
 
 interface EncodeResult {
@@ -46,6 +48,7 @@ export function encode(opts: EncodeOptions): EncodeResult {
     segmentDurations,
     subtitlesSrtPath,
     subtitlesConfig,
+    theme,
   } = opts;
   const outputSize = output.size ?? viewport;
   const fps = output.fps;
@@ -87,9 +90,24 @@ export function encode(opts: EncodeOptions): EncodeResult {
   // Step 2: Scale → [scaled]
   const scaleFilter = `;[mid]fps=${fps},scale=${outputSize.width}:${outputSize.height},format=yuv420p[scaled]`;
 
+  // Step 2.5: Theme compositor → [themed] (optional)
+  let themeFilter = "";
+  let postScaleLabel = "scaled";
+
+  const resolvedTheme = resolveTheme(theme);
+  if (resolvedTheme) {
+    const tf = buildThemeFilter(
+      postScaleLabel,
+      outputSize.width,
+      outputSize.height,
+      resolvedTheme
+    );
+    themeFilter = tf.filters;
+    postScaleLabel = tf.outputLabel;
+  }
+
   // Step 3: Subtitles → [subtitled] (optional)
   let subtitleFilter = "";
-  let postScaleLabel = "scaled";
 
   if (subtitlesSrtPath && subtitlesConfig?.burn) {
     const sub = buildSubtitleFilter(
@@ -108,7 +126,7 @@ export function encode(opts: EncodeOptions): EncodeResult {
   );
 
   const filterComplex =
-    concatOrTransition + scaleFilter + subtitleFilter + overlayFilters;
+    concatOrTransition + scaleFilter + themeFilter + subtitleFilter + overlayFilters;
 
   const results: EncodeResult = { files: [] };
 

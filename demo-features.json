@@ -21,10 +21,13 @@
     "type": "fade",
     "duration": 0.5
   },
+  "theme": "showcase",
+  "renderer": "remotion",
   "cursor": {
     "size": 22,
     "color": "rgba(255,255,255,0.85)",
-    "clickEffect": true
+    "clickEffect": true,
+    "hoverZoom": 1.3
   },
   "segments": [
     {

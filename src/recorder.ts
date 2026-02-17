@@ -247,26 +247,44 @@ export async function record(
     }
   }
 
-  // ─── 7. FFmpeg: trim + concat/transitions + subtitles + overlays + encode ───
-  console.log("\n-> Encoding with FFmpeg...\n");
+  // ─── 7. Encode: FFmpeg (default) or Remotion (premium) ───
+  let results: { files: Array<{ path: string; format: string; sizeMB: string }> };
 
-  // Collect per-segment transition configs
-  const perSegmentTransitions = config.segments.map((s) => s.transition);
-  const hasTransitions =
-    config.transitions || perSegmentTransitions.some((t) => t !== undefined);
+  if (config.renderer === "remotion") {
+    console.log("\n-> Rendering with Remotion...\n");
+    const { renderWithRemotion } = await import("./remotion-renderer.js");
+    results = await renderWithRemotion({
+      segments,
+      segmentDurations,
+      output: config.output,
+      viewport: config.viewport,
+      theme: config.theme,
+      transitions: config.transitions,
+      overlays: config.overlays,
+      audioPath,
+    });
+  } else {
+    console.log("\n-> Encoding with FFmpeg...\n");
 
-  const results = encode({
-    segments,
-    output: config.output,
-    viewport: config.viewport,
-    overlays: config.overlays,
-    audioPath,
-    transitions: config.transitions,
-    perSegmentTransitions: hasTransitions ? perSegmentTransitions : undefined,
-    segmentDurations,
-    subtitlesSrtPath,
-    subtitlesConfig: config.subtitles,
-  });
+    // Collect per-segment transition configs
+    const perSegmentTransitions = config.segments.map((s) => s.transition);
+    const hasTransitions =
+      config.transitions || perSegmentTransitions.some((t) => t !== undefined);
+
+    results = encode({
+      segments,
+      output: config.output,
+      viewport: config.viewport,
+      overlays: config.overlays,
+      audioPath,
+      transitions: config.transitions,
+      perSegmentTransitions: hasTransitions ? perSegmentTransitions : undefined,
+      segmentDurations,
+      subtitlesSrtPath,
+      subtitlesConfig: config.subtitles,
+      theme: config.theme,
+    });
+  }
 
   // ─── 8. Report ───
   console.log("\nDone!");
