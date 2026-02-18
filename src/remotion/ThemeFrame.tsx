@@ -2,13 +2,14 @@
  * ThemeFrame — CSS-based theme compositor for Remotion.
  *
  * Replaces the FFmpeg geq/drawtext/boxblur filter chain with simple CSS:
- * - Dark background
+ * - Animated aurora/mesh wallpaper background
  * - Content padding
  * - Rounded corners (borderRadius)
  * - Drop shadow (boxShadow)
  * - macOS window chrome with traffic light dots
  */
 import { AbsoluteFill } from "remotion";
+import { Wallpaper } from "./Wallpaper.js";
 import type { ThemeInput } from "./types.js";
 
 interface ThemeFrameProps {
@@ -20,7 +21,14 @@ export const ThemeFrame: React.FC<ThemeFrameProps> = ({ theme, children }) => {
   const padding = `${theme.padding * 100}%`;
 
   return (
-    <AbsoluteFill style={{ background: theme.background }}>
+    <AbsoluteFill>
+      {/* Animated wallpaper background */}
+      <Wallpaper
+        type={theme.wallpaper ?? "none"}
+        background={theme.background}
+      />
+
+      {/* Window frame */}
       <div
         style={{
           position: "absolute",
@@ -31,7 +39,7 @@ export const ThemeFrame: React.FC<ThemeFrameProps> = ({ theme, children }) => {
           borderRadius: theme.radius,
           overflow: "hidden",
           boxShadow: theme.shadow
-            ? "0 20px 60px rgba(0,0,0,0.6), 0 8px 24px rgba(0,0,0,0.4), 0 0 80px rgba(99,102,241,0.08)"
+            ? "0 25px 80px rgba(0,0,0,0.55), 0 10px 30px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05)"
             : "none",
           display: "flex",
           flexDirection: "column",

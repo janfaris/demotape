@@ -21,7 +21,7 @@
     "size": 24,
     "color": "rgba(255,255,255,0.9)",
     "clickEffect": true,
-    "hoverZoom": 1.8
+    "hoverZoom": 1.2
   },
   "segments": [
     {

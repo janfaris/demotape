@@ -14,6 +14,8 @@ export interface CursorOptions {
   color: string;
   clickEffect: boolean;
   hoverZoom?: number; // e.g. 1.25 — zoom into the action target area
+  style?: "arrow" | "circle"; // "arrow" = SVG macOS cursor (Remotion only)
+  highlight?: boolean; // radial glow behind cursor
 }
 
 const CURSOR_ID = "__demotape-cursor";
@@ -34,6 +36,8 @@ export function resolveCursorConfig(
     color: cursor.color ?? "rgba(0,0,0,0.8)",
     clickEffect: cursor.clickEffect ?? true,
     hoverZoom: cursor.hoverZoom,
+    style: cursor.style ?? "circle",
+    highlight: cursor.highlight ?? false,
   };
 }
 
@@ -131,12 +135,18 @@ export function getCursorZoomInScript(
   viewportY: number,
   zoom: number
 ): string {
+  // Blend the target point toward viewport center for a subtle, centered zoom
+  // 70% viewport center + 30% target element — avoids jarring off-screen pans
   return `(() => {
     const sx = window.scrollX;
     const sy = window.scrollY;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const blendedX = (vw / 2) * 0.7 + ${viewportX} * 0.3 + sx;
+    const blendedY = (vh / 2) * 0.7 + ${viewportY} * 0.3 + sy;
     const html = document.documentElement;
-    html.style.transition = 'transform 800ms cubic-bezier(0.22, 0.61, 0.36, 1)';
-    html.style.transformOrigin = (${viewportX} + sx) + 'px ' + (${viewportY} + sy) + 'px';
+    html.style.transition = 'transform 1000ms cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    html.style.transformOrigin = blendedX + 'px ' + blendedY + 'px';
     html.style.transform = 'scale(${zoom})';
   })()`;
 }

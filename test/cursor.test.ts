@@ -30,11 +30,13 @@ describe("resolveCursorConfig", () => {
       color: "red",
       clickEffect: false,
     });
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       size: 30,
       color: "red",
       clickEffect: false,
     });
+    expect(result!.style).toBe("circle");
+    expect(result!.highlight).toBe(false);
   });
 
   it("fills in missing optional fields from defaults", () => {

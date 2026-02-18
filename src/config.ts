@@ -141,6 +141,8 @@ const CursorOptionsSchema = z.object({
   color: z.string().default("rgba(0,0,0,0.8)"),
   clickEffect: z.boolean().default(true),
   hoverZoom: z.number().min(1).max(2).optional(), // e.g. 1.25 — zoom into action target
+  style: z.enum(["arrow", "circle"]).default("circle"), // "arrow" = SVG macOS cursor (Remotion only)
+  highlight: z.boolean().default(false), // radial glow behind cursor
 });
 
 const CursorSchema = z.union([z.boolean(), CursorOptionsSchema]);
@@ -151,6 +153,17 @@ const ThemeOptionsSchema = z.object({
   radius: z.number().int().min(0).default(16),
   shadow: z.boolean().default(true),
   windowChrome: z.boolean().default(false), // macOS-style title bar
+  wallpaper: z.enum(["aurora", "mesh", "gradient", "none"]).default("none"),
+});
+
+const IntroSchema = z.object({
+  title: z.string(),
+  subtitle: z.string().optional(),
+});
+
+const OutroSchema = z.object({
+  text: z.string(),
+  url: z.string().optional(),
 });
 
 const ThemeSchema = z.union([
@@ -174,6 +187,8 @@ export const DemotapeConfigSchema = z.object({
   transitions: TransitionConfigSchema.optional(),
   cursor: CursorSchema.optional(),
   theme: ThemeSchema.optional(),
+  intro: IntroSchema.optional(),
+  outro: OutroSchema.optional(),
   renderer: z.enum(["ffmpeg", "remotion"]).default("ffmpeg"),
   segments: z.array(SegmentSchema).min(1, "At least one segment is required"),
 });

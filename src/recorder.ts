@@ -177,12 +177,21 @@ export async function record(
   // Resolve cursor config
   const cursorConfig = resolveCursorConfig(config.cursor);
 
-  for (const segment of config.segments) {
+  // When using Remotion with cursor, capture metadata instead of DOM injection
+  const useMetadataCapture =
+    config.renderer === "remotion" &&
+    cursorConfig !== undefined &&
+    cursorConfig.style === "arrow";
+
+  for (let i = 0; i < config.segments.length; i++) {
+    const segment = config.segments[i];
     const result = await recordSegment(context, segment, config.baseUrl, {
       removeOverlays: config.removeDevOverlays,
       fps: config.output.fps,
       visualReadiness,
       cursor: cursorConfig,
+      captureMetadata: useMetadataCapture,
+      segmentIndex: i,
     });
     segments.push(result);
   }
@@ -262,6 +271,9 @@ export async function record(
       transitions: config.transitions,
       overlays: config.overlays,
       audioPath,
+      cursorConfig: useMetadataCapture ? cursorConfig : undefined,
+      intro: config.intro,
+      outro: config.outro,
     });
   } else {
     console.log("\n-> Encoding with FFmpeg...\n");

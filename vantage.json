@@ -23,10 +23,18 @@
   "theme": "showcase",
   "renderer": "remotion",
   "cursor": {
-    "size": 24,
-    "color": "rgba(255,255,255,0.9)",
+    "style": "arrow",
+    "highlight": true,
     "clickEffect": true,
-    "hoverZoom": 1.8
+    "hoverZoom": 1.2
+  },
+  "intro": {
+    "title": "Vantage",
+    "subtitle": "Smart Real Estate for Puerto Rico"
+  },
+  "outro": {
+    "text": "Try it free",
+    "url": "vantage.pr"
   },
   "segments": [
     {

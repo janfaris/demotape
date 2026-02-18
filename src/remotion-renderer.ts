@@ -3,14 +3,14 @@
  *
  * Replaces the FFmpeg filter chain pipeline with Remotion's React-based
  * compositing for richer visuals: spring transitions, CSS themes,
- * animated captions, and programmatic motion graphics.
+ * animated captions, programmatic motion graphics, and SVG cursor overlays.
  *
  * Pipeline:
  * 1. bundle() — Webpack-bundle the Remotion composition (cached)
  * 2. selectComposition() — resolve dynamic metadata (duration, fps)
  * 3. renderMedia() — render frames in headless Chrome + encode
  */
-import { resolve, basename, dirname } from "path";
+import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 import { copyFileSync, mkdirSync, existsSync, readFileSync, rmSync } from "fs";
 import type { SegmentResult } from "./segments.js";
@@ -20,8 +20,16 @@ import type {
   OverlayConfig,
   ThemeConfig,
 } from "./config.js";
+import type { CursorOptions } from "./cursor.js";
 import { resolveTheme } from "./theme.js";
-import type { DemotapeVideoProps, ThemeInput } from "./remotion/types.js";
+import type {
+  DemotapeVideoProps,
+  ThemeInput,
+  SegmentCursorInput,
+  CursorEventInput,
+  CursorConfigInput,
+} from "./remotion/types.js";
+import type { SegmentCursorData, CursorEvent } from "./cursor-events.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -35,6 +43,9 @@ interface RemotionRenderOptions {
   transitions?: TransitionConfig;
   overlays?: OverlayConfig;
   audioPath?: string;
+  cursorConfig?: CursorOptions;
+  intro?: { title: string; subtitle?: string };
+  outro?: { text: string; url?: string };
 }
 
 interface RemotionRenderResult {
@@ -42,6 +53,63 @@ interface RemotionRenderResult {
 }
 
 let cachedBundleLocation: string | null = null;
+
+/**
+ * Load cursor events from .events.json files and convert time → frame numbers.
+ */
+function loadCursorData(
+  segments: SegmentResult[],
+  fps: number
+): SegmentCursorInput[] | undefined {
+  const cursorInputs: SegmentCursorInput[] = [];
+
+  for (const seg of segments) {
+    if (!seg.cursorEventsPath) continue;
+
+    try {
+      const raw = readFileSync(seg.cursorEventsPath, "utf8");
+      const data: SegmentCursorData = JSON.parse(raw);
+
+      const events: CursorEventInput[] = data.events.map(
+        (e: CursorEvent) => ({
+          type: e.type,
+          frame: Math.round(e.time * fps),
+          x: e.x,
+          y: e.y,
+          targetBox: e.targetBox,
+        })
+      );
+
+      cursorInputs.push({
+        segmentIndex: data.segmentIndex,
+        viewport: data.viewport,
+        events,
+      });
+    } catch {
+      console.warn(
+        `  Warning: could not load cursor events from ${seg.cursorEventsPath}`
+      );
+    }
+  }
+
+  return cursorInputs.length > 0 ? cursorInputs : undefined;
+}
+
+/**
+ * Build CursorConfigInput from resolved CursorOptions.
+ */
+function buildCursorConfigInput(
+  opts: CursorOptions | undefined
+): CursorConfigInput | undefined {
+  if (!opts) return undefined;
+  return {
+    enabled: true,
+    style: opts.style ?? "circle",
+    highlight: opts.highlight ?? false,
+    clickEffect: opts.clickEffect ?? true,
+    autoZoom: opts.hoverZoom,
+  };
+}
 
 /**
  * Render the final video using Remotion instead of FFmpeg.
@@ -63,6 +131,7 @@ export async function renderWithRemotion(
     theme,
     transitions,
     audioPath,
+    cursorConfig,
   } = opts;
 
   const outputSize = output.size ?? viewport;
@@ -107,7 +176,22 @@ export async function renderWithRemotion(
       radius: resolvedTheme.radius,
       shadow: resolvedTheme.shadow,
       windowChrome: resolvedTheme.windowChrome,
+      wallpaper: resolvedTheme.wallpaper,
     };
+  }
+
+  // ─── 2.5. Load cursor event data ───
+  const cursorData = loadCursorData(segments, output.fps);
+  const cursorConfigInput = buildCursorConfigInput(cursorConfig);
+
+  if (cursorData) {
+    const totalEvents = cursorData.reduce(
+      (sum, d) => sum + d.events.length,
+      0
+    );
+    console.log(
+      `  -> Cursor overlay: ${totalEvents} events across ${cursorData.length} segments`
+    );
   }
 
   // ─── 3. Bundle the Remotion project (cached across renders) ───
@@ -132,6 +216,10 @@ export async function renderWithRemotion(
     width: outputSize.width,
     height: outputSize.height,
     fps: output.fps,
+    cursorData,
+    cursorConfig: cursorConfigInput,
+    intro: opts.intro,
+    outro: opts.outro,
   };
 
   // ─── 5. Select composition (resolves dynamic duration) ───

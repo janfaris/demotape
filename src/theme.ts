@@ -19,6 +19,7 @@ export interface ThemeOptions {
   radius: number; // corner radius in px
   shadow: boolean;
   windowChrome: boolean; // macOS-style title bar with traffic lights
+  wallpaper: "aurora" | "mesh" | "gradient" | "none";
 }
 
 /**
@@ -39,6 +40,7 @@ export function resolveTheme(
       radius: 12,
       shadow: true,
       windowChrome: true,
+      wallpaper: "aurora" as const,
     };
   }
 
@@ -49,6 +51,7 @@ export function resolveTheme(
     radius: theme.radius ?? 16,
     shadow: theme.shadow ?? true,
     windowChrome: theme.windowChrome ?? false,
+    wallpaper: (theme.wallpaper ?? "none") as "aurora" | "mesh" | "gradient" | "none",
   };
 }
 
