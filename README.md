@@ -1,5 +1,10 @@
 # demotape
 
+[![npm](https://img.shields.io/npm/v/demotape.svg?color=cb3837&logo=npm)](https://www.npmjs.com/package/demotape)
+[![downloads](https://img.shields.io/npm/dm/demotape.svg)](https://www.npmjs.com/package/demotape)
+[![license](https://img.shields.io/npm/l/demotape.svg)](./LICENSE)
+[![node](https://img.shields.io/node/v/demotape.svg)](https://nodejs.org)
+
 **Automated demo videos from your live web app. JSON config in, polished MP4 out.**
 
 Stop manually re-recording your demo video every time you change a button. Define page segments, scroll choreography, and text overlays in a JSON config — get pixel-perfect, skeleton-free videos for landing pages, Product Hunt, Instagram Stories, and docs.
