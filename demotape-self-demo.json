@@ -24,14 +24,14 @@
       "name": "projects",
       "path": "/",
       "settleMs": 1000,
-      "scroll": { "distance": 2200, "duration": 4000 },
+      "scroll": { "distance": 2400, "duration": 4000 },
       "dwellMs": 1500
     },
     {
-      "name": "writing",
-      "path": "/writing",
-      "settleMs": 1500,
-      "scroll": { "distance": 600, "duration": 2500 },
+      "name": "footer",
+      "path": "/",
+      "settleMs": 800,
+      "scroll": { "distance": 4500, "duration": 3000 },
       "dwellMs": 1500
     }
   ]
