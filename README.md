@@ -7,6 +7,12 @@
 
 **Automated demo videos from your live web app. JSON config in, polished MP4 out.**
 
+<p align="center">
+  <img src="./assets/readme/demo.gif" alt="demotape recording janfaris.com" width="720" />
+  <br/>
+  <sub>demotape recording <a href="https://janfaris.com">janfaris.com</a> — no human, no manual scrolling, no loading skeletons.</sub>
+</p>
+
 Stop manually re-recording your demo video every time you change a button. Define page segments, scroll choreography, and text overlays in a JSON config — get pixel-perfect, skeleton-free videos for landing pages, Product Hunt, Instagram Stories, and docs.
 
 ```bash

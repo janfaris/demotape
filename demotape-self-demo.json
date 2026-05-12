@@ -1,0 +1,38 @@
+{
+  "baseUrl": "https://janfaris.com",
+  "viewport": { "width": 1280, "height": 800 },
+  "output": {
+    "size": { "width": 1280, "height": 800 },
+    "format": "mp4",
+    "fps": 30,
+    "crf": 28,
+    "name": "demotape-demo",
+    "dir": "./assets"
+  },
+  "colorScheme": "dark",
+  "removeDevOverlays": true,
+  "suppressAnimations": true,
+  "segments": [
+    {
+      "name": "hero",
+      "path": "/",
+      "settleMs": 1500,
+      "scroll": { "distance": 800, "duration": 3000 },
+      "dwellMs": 1500
+    },
+    {
+      "name": "projects",
+      "path": "/",
+      "settleMs": 1000,
+      "scroll": { "distance": 2200, "duration": 4000 },
+      "dwellMs": 1500
+    },
+    {
+      "name": "writing",
+      "path": "/writing",
+      "settleMs": 1500,
+      "scroll": { "distance": 600, "duration": 2500 },
+      "dwellMs": 1500
+    }
+  ]
+}
